@@ -16,18 +16,8 @@ az storage blob upload \
 echo "Waiting for processing..."
 sleep 5
 
-echo "Checking Kafka messages..."
-docker-compose exec -T kafka \
-    kafka-console-consumer \
-    --bootstrap-server kafka:29092 \
-    --topic transactions.raw \
-    --from-beginning \
-    --max-messages 1 \
-    --timeout-ms 10000 \
-    --property print.key=true \
-    --property key.separator=":" \
-    --property print.timestamp=true \
-    --property print.headers=true
+echo "Running consumer to check messages..."
+go run ./cmd/consumer/main.go
 
 echo "Checking validator logs..."
 docker-compose logs --tail=50 validator | grep "File processed successfully"

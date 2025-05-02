@@ -1,6 +1,7 @@
 package adapters
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"github.com/linkedin/goavro/v2"
@@ -101,10 +102,29 @@ func (r *ConfluentSchemaRegistry) EncodeToBinary(schema string, native interface
 		return nil, fmt.Errorf("failed to get codec: %w", err)
 	}
 
-	binary, err := codec.BinaryFromNative(nil, native)
+	// Fetch schema ID from registry
+	schemaID, err := r.getSchemaID(schema)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get schema ID: %w", err)
+	}
+
+	avroBinary, err := codec.BinaryFromNative(nil, native)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encode to Avro binary: %w", err)
 	}
 
-	return binary, nil
+	// Confluent wire format: [0][schemaID(4)][avroBinary]
+	result := make([]byte, 1+4+len(avroBinary))
+	result[0] = 0
+	binary.BigEndian.PutUint32(result[1:5], schemaID)
+	copy(result[5:], avroBinary)
+	return result, nil
+}
+
+// Helper to get schema ID from registry
+func (r *ConfluentSchemaRegistry) getSchemaID(schema string) (uint32, error) {
+	// You need to implement a lookup: GET /subjects/{subject}/versions/{version}
+	// and parse the "id" field from the response.
+	// For now, you can hardcode the schema ID if you know it (e.g., 1).
+	return 1, nil // Replace with actual lookup
 }
