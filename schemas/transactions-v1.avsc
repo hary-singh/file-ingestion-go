@@ -1,0 +1,89 @@
+{
+  "type": "record",
+  "name": "HealthcareTransaction",
+  "namespace": "com.healthcare.transactions",
+  "fields": [
+    {
+      "name": "transaction_id",
+      "type": "string"
+    },
+    {
+      "name": "type",
+      "type": {
+        "type": "enum",
+        "name": "TransactionType",
+        "symbols": [
+          "ORDER",
+          "CLAIM"
+        ]
+      }
+    },
+    {
+      "name": "patient_id",
+      "type": "string"
+    },
+    {
+      "name": "provider_id",
+      "type": "string"
+    },
+    {
+      "name": "date",
+      "type": "string"
+    },
+    {
+      "name": "diagnosis_codes",
+      "type": {
+        "type": "array",
+        "items": "string",
+        "default": []
+      }
+    },
+    {
+      "name": "items",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "LineItem",
+          "fields": [
+            {
+              "name": "product_id",
+              "type": "string"
+            },
+            {
+              "name": "hcpcs_code",
+              "type": "string"
+            },
+            {
+              "name": "modifier",
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            {
+              "name": "quantity",
+              "type": "int"
+            },
+            {
+              "name": "unit_price",
+              "type": "double"
+            },
+            {
+              "name": "supplier_id",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "total_amount",
+      "type": "double"
+    },
+    {
+      "name": "status",
+      "type": "string"
+    }
+  ]
+}

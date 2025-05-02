@@ -1,0 +1,2 @@
+transaction_id,type,patient_id,provider_id,date,diagnosis_codes,product_id,hcpcs_code,modifier,quantity,unit_price,supplier_id,total_amount,status
+TRX000002,CLAIM,PT67890,PRV456,2024-03-20T14:30:00Z,"S72.001A,Z96.641",EQ-E0277-5678,E0277,RR,1,350.00,SUP456,350.00,SUBMITTED

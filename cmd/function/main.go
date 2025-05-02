@@ -100,7 +100,6 @@ func startHealthCheck() {
 }
 
 func startLocalProcessing(validator *services.FileValidator, log *zap.Logger) {
-	// Wait for test-local.sh to create container and upload file
 	time.Sleep(5 * time.Second)
 
 	event := blobEvent{
@@ -173,7 +172,7 @@ func createEventHandler(validator *services.FileValidator, log *zap.Logger) func
 
 func parseEventURL(urlStr string) (customerID, fileName string, err error) {
 	customerID = "cust123" // TODO: Extract from URL path
-	fileName = "orders-2024-03-20.csv"
+	fileName = "transactions-2024-03-20.csv"
 	return
 }
 

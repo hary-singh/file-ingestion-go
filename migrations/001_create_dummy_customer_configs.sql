@@ -9,10 +9,10 @@ CREATE TABLE customer_configs
     updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Add some test data
+-- Add initial test data
 INSERT INTO customer_configs (customer_id, schema_subject, kafka_topic, file_pattern, validation_profile)
-VALUES ('cust123', 'orders-v1', 'orders.raw', 'orders-*.csv', 'standard_orders'),
-       ('cust456', 'claims-v1', 'claims.raw', 'claims-*.csv', 'standard_claims');
+VALUES ('cust123', 'transactions-v1', 'transactions.raw', 'transactions-*.csv', 'standard_transactions'),
+       ('cust456', 'transactions-v1', 'transactions.raw', 'transactions-*.csv', 'standard_transactions');
 
 -- Add audit trail table for file processing
 CREATE TABLE file_processing_audit

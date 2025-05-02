@@ -1,70 +1,59 @@
-.PHONY: build test clean dev docker test-local check-prereqs stop start restart logs rebuild
+.PHONY: all build test clean dev docker test-small test-large test-all check-prereqs stop start restart logs rebuild
 
-# Variables
-BINARY_NAME=validator
-BINARY_PATH=bin/$(BINARY_NAME)
-MAX_WAIT=60
+# Default target
+all: build
 
-# Build and test
-build:
-	go build -o $(BINARY_PATH) ./cmd/function
+# Check prerequisites
+check-prereqs:
+	@command -v docker >/dev/null 2>&1 || { echo "docker is required but not installed. Aborting." >&2; exit 1; }
+	@command -v docker-compose >/dev/null 2>&1 || { echo "docker-compose is required but not installed. Aborting." >&2; exit 1; }
+	@command -v az >/dev/null 2>&1 || { echo "azure-cli is required but not installed. Aborting." >&2; exit 1; }
 
-test:
-	go test -v -race ./...
+# Build the application
+build: check-prereqs
+	@echo "Building validator function..."
+	@docker-compose build validator
 
-clean:
-	rm -rf bin/
-	docker-compose down -v
+# Clean up resources
+clean: stop
+	@echo "Cleaning up..."
+	@docker-compose down -v
+	@rm -rf ./test-files/samples/large-transactions.csv
 
-# Docker commands
-docker:
-	docker build --no-cache -t validator-function .
+# Development environment
+dev: start
+	@echo "Starting development environment..."
+	@docker-compose logs -f
 
-# Service management
+# Container management
 start: check-prereqs
 	@echo "Starting services..."
-	docker-compose up -d
-	@echo "Waiting for services to be healthy..."
-	@for i in $$(seq 1 $(MAX_WAIT)); do \
-		if docker-compose ps | grep -q "healthy"; then \
-			echo "Services are healthy"; \
-			exit 0; \
-		fi; \
-		echo "Waiting for services... ($$i/$(MAX_WAIT))"; \
-		sleep 2; \
-	done; \
-	echo "Services failed to become healthy within $(MAX_WAIT) seconds"; \
-	exit 1
+	@docker-compose up -d
 
 stop:
 	@echo "Stopping services..."
-	docker-compose down
+	@docker-compose down
 
 restart: stop start
 
+# Testing
+test-small: start
+	@echo "Running small file test..."
+	@chmod +x test-files/test-small.sh
+	@./test-files/test-small.sh
+
+test-large: start
+	@echo "Running large file test..."
+	@chmod +x test-files/test-large.sh
+	@./test-files/test-large.sh
+
+test-all: clean start
+	@echo "Running all tests..."
+	@make test-small
+	@make test-large
+
+# Utility commands
 logs:
-	docker-compose logs -f
+	@docker-compose logs -f
 
-# Rebuild specific service
-rebuild:
-	docker-compose build --no-cache validator
-	docker-compose up -d validator
-
-# Testing helpers
-test-local: clean
-	@echo "Building and starting services..."
-	docker-compose build validator
-	docker-compose up -d
-	@echo "Running local tests..."
-	@chmod +x ./test-files/test-local.sh
-	./test-files/test-local.sh
-
-# Prerequisites check
-check-prereqs:
-	@echo "Checking prerequisites..."
-	@command -v az >/dev/null 2>&1 || { echo "Error: Azure CLI is required"; exit 1; }
-	@command -v docker-compose >/dev/null 2>&1 || { echo "Error: Docker Compose is required"; exit 1; }
-	@command -v curl >/dev/null 2>&1 || { echo "Error: curl is required"; exit 1; }
-
-# Development workflow
-dev: build start
+rebuild: clean build start

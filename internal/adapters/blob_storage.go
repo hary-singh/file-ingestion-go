@@ -24,7 +24,7 @@ func NewAzureBlobStorage(connectionString string) (*AzureBlobStorage, error) {
 }
 
 func (s *AzureBlobStorage) DownloadFile(ctx context.Context, customerID, fileName string) (io.ReadCloser, error) {
-	containerName := fmt.Sprintf("%s-orders", customerID)
+	containerName := fmt.Sprintf("%s-transactions", customerID)
 	blobClient := s.client.ServiceClient().NewContainerClient(containerName).NewBlockBlobClient(fileName)
 
 	response, err := blobClient.DownloadStream(ctx, nil)

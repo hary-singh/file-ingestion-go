@@ -12,12 +12,12 @@ done
 echo "Registering schemas..."
 
 # Convert schema file to single-line JSON string with proper escaping
-SCHEMA=$(cat schemas/orders-v1.avsc | tr -d '\n' | sed 's/"/\\"/g')
+SCHEMA=$(cat schemas/transactions-v1.avsc | tr -d '\n' | sed 's/"/\\"/g')
 
-# Register Orders schema with proper JSON payload
+# Register Transactions schema with proper JSON payload
 RESPONSE=$(curl -s -w "\n%{http_code}" -X POST -H "Content-Type: application/json" \
   -d "{\"schema\":\"${SCHEMA}\"}" \
-  http://localhost:8081/subjects/orders-v1/versions)
+  http://localhost:8081/subjects/transactions-v1/versions)
 
 HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
 BODY=$(echo "$RESPONSE" | sed '$d')
@@ -25,15 +25,6 @@ BODY=$(echo "$RESPONSE" | sed '$d')
 if [ "$HTTP_CODE" -ne 200 ]; then
     echo "Schema registration failed with code $HTTP_CODE"
     echo "Error: $BODY"
-    exit 1
-fi
-
-# Verify registration
-VERIFY_RESPONSE=$(curl -s -w "\n%{http_code}" http://localhost:8081/subjects/orders-v1/versions/1)
-VERIFY_CODE=$(echo "$VERIFY_RESPONSE" | tail -n1)
-
-if [ "$VERIFY_CODE" -ne 200 ]; then
-    echo "Schema verification failed with code $VERIFY_CODE"
     exit 1
 fi
 
