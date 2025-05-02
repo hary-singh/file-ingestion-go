@@ -68,9 +68,21 @@ func (v *FileValidator) ProcessFile(ctx context.Context, customerID, fileName st
 		return v.failedResult(result, err)
 	}
 
-	if err := v.publishRecords(ctx, records, customerID, fileName, config.KafkaTopic); err != nil {
+	timings := make([]float64, 0, len(records))
+	if err := v.publishRecords(ctx, records, customerID, fileName, config.KafkaTopic, &timings); err != nil {
 		return v.failedResult(result, err)
 	}
+
+	totalDuration := time.Since(startTime).Seconds()
+	v.log.Info("File processed timing summary",
+		zap.String("customerID", customerID),
+		zap.String("fileName", fileName),
+		zap.Int("records", len(records)),
+		zap.Float64("total_seconds", totalDuration),
+		zap.Float64("min_per_message", minFloat64(timings)),
+		zap.Float64("max_per_message", maxFloat64(timings)),
+		zap.Float64("avg_per_message", avgFloat64(timings)),
+	)
 
 	return v.successResult(result, records, messages), nil
 }
@@ -128,10 +140,11 @@ func (v *FileValidator) processContent(ctx context.Context, customerID, fileName
 	return processor.ProcessContent(content)
 }
 
-func (v *FileValidator) publishRecords(ctx context.Context, records [][]byte, customerID, fileName, topic string) error {
+func (v *FileValidator) publishRecords(ctx context.Context, records [][]byte, customerID, fileName, topic string, timings *[]float64) error {
 	headers := v.createMessageHeaders(customerID, fileName)
 
 	for i, record := range records {
+		t0 := time.Now()
 		if err := v.producer.PublishMessage(ctx, topic, customerID, record, headers); err != nil {
 			return &domain.BusinessError{
 				Type:    domain.ErrKafkaPublish,
@@ -139,10 +152,13 @@ func (v *FileValidator) publishRecords(ctx context.Context, records [][]byte, cu
 				Err:     err,
 			}
 		}
-		v.log.Info("Published message to Kafka",
+		elapsed := time.Since(t0).Seconds()
+		*timings = append(*timings, elapsed)
+		v.log.Debug("Published message to Kafka",
 			zap.String("topic", topic),
 			zap.String("customerID", customerID),
 			zap.Int("recordNumber", i+1),
+			zap.Float64("publish_seconds", elapsed),
 			zap.ByteString("message", record))
 	}
 	return nil
@@ -171,4 +187,42 @@ func (v *FileValidator) successResult(result *domain.ValidationResult, records [
 	result.Duration = time.Since(result.StartTime).Seconds()
 	result.Messages = messages
 	return result
+}
+
+// Helper functions for stats
+func minFloat64(arr []float64) float64 {
+	if len(arr) == 0 {
+		return 0
+	}
+	min := arr[0]
+	for _, v := range arr {
+		if v < min {
+			min = v
+		}
+	}
+	return min
+}
+
+func maxFloat64(arr []float64) float64 {
+	if len(arr) == 0 {
+		return 0
+	}
+	max := arr[0]
+	for _, v := range arr {
+		if v > max {
+			max = v
+		}
+	}
+	return max
+}
+
+func avgFloat64(arr []float64) float64 {
+	if len(arr) == 0 {
+		return 0
+	}
+	sum := 0.0
+	for _, v := range arr {
+		sum += v
+	}
+	return sum / float64(len(arr))
 }
