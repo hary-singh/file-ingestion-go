@@ -1,36 +1,50 @@
 package adapters
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/linkedin/goavro/v2"
+	"io"
+	"net/http"
 	"sync"
 )
 
 type ConfluentSchemaRegistry struct {
+	baseURL     string
 	schemaCache map[string]*goavro.Codec
-	mutex       sync.RWMutex // Add mutex for thread safety
+	mutex       sync.RWMutex
 }
 
 func NewConfluentSchemaRegistry() *ConfluentSchemaRegistry {
 	return &ConfluentSchemaRegistry{
+		baseURL:     "http://schema-registry:8081",
 		schemaCache: make(map[string]*goavro.Codec),
 	}
 }
 
+type schemaResponse struct {
+	Schema string `json:"schema"`
+}
+
 func (r *ConfluentSchemaRegistry) GetSchema(subject string, version int) (string, error) {
-	// TODO: In production, implement actual HTTP call to Confluent Schema Registry
-	// This is a sample schema for testing
-	sampleSchema := `{
-	        "type": "record",
-	        "name": "Order",
-	        "fields": [
-	            {"name": "order_id", "type": "string"},
-	            {"name": "customer_name", "type": "string"},
-	            {"name": "order_date", "type": "string"},
-	            {"name": "total_amount", "type": "double"}
-	        ]
-	    }`
-	return sampleSchema, nil
+	url := fmt.Sprintf("%s/subjects/%s/versions/%d", r.baseURL, subject, version)
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", fmt.Errorf("failed to fetch schema: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("schema registry returned status %d: %s", resp.StatusCode, body)
+	}
+
+	var schemaResp schemaResponse
+	if err := json.NewDecoder(resp.Body).Decode(&schemaResp); err != nil {
+		return "", fmt.Errorf("failed to decode schema response: %w", err)
+	}
+
+	return schemaResp.Schema, nil
 }
 
 func (r *ConfluentSchemaRegistry) Validate(schema string, data []byte) error {

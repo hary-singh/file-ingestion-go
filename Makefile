@@ -53,7 +53,7 @@ rebuild:
 # Testing helpers
 test-local: clean
 	@echo "Building and starting services..."
-	docker-compose build --no-cache validator
+	docker-compose build validator
 	docker-compose up -d
 	@echo "Running local tests..."
 	@chmod +x ./test-files/test-local.sh

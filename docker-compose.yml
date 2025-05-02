@@ -1,6 +1,7 @@
 services:
   validator:
     build: .
+    container_name: validator
     ports:
       - "8080:8080"
     environment:
@@ -29,11 +30,13 @@ services:
 
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite
+    container_name: azurite
     ports:
       - "10000:10000"
 
   postgres:
     image: postgres:15-alpine
+    container_name: postgres
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -50,6 +53,7 @@ services:
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
+    container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -61,6 +65,7 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -86,7 +91,9 @@ services:
       start_period: 15s
 
   schema-registry:
-    image: confluentinc/cp-schema-registry:7.4.0
+    image: confluentinc/cp-schema-registry:7.5.1
+    hostname: schema-registry
+    container_name: schema-registry
     depends_on:
       kafka:
         condition: service_healthy

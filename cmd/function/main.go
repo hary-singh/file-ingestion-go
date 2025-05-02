@@ -179,7 +179,7 @@ func parseEventURL(urlStr string) (customerID, fileName string, err error) {
 
 func handleGracefulShutdown(log *zap.Logger) {
 	log.Info("Shutting down gracefully...")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	<-ctx.Done()
 	log.Info("Shutdown complete")

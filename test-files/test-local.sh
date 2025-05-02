@@ -27,6 +27,13 @@ echo "Ensuring services are running..."
 
 wait_for_healthy kafka || exit 1
 wait_for_healthy postgres || exit 1
+wait_for_healthy schema-registry || exit 1
+
+# Get the directory where the script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+chmod +x "${SCRIPT_DIR}/scripts/init-schemas.sh"
+"${SCRIPT_DIR}/scripts/init-schemas.sh"
 
 # Azure Storage connection string
 STORAGE_CONN="DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://localhost:10000/devstoreaccount1"
