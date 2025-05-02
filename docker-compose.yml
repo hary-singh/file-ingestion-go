@@ -89,6 +89,16 @@ services:
       timeout: 5s
       retries: 5
       start_period: 15s
+    command:
+      - bash
+      - -c
+      - |
+        /etc/confluent/docker/run &
+        # Wait for Kafka to be ready
+        while ! nc -z localhost 9092; do sleep 1; done
+        # Create the topic if it doesn't exist
+        kafka-topics --bootstrap-server localhost:9092 --create --if-not-exists --topic transactions.raw --partitions 1 --replication-factor 1
+        wait
 
   schema-registry:
     image: confluentinc/cp-schema-registry:7.5.1

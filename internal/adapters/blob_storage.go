@@ -67,3 +67,7 @@ func (s *AzureBlobStorage) UploadFile(ctx context.Context, customerID, fileName 
 
 	return nil
 }
+
+func (s *AzureBlobStorage) Client() *azblob.Client {
+	return s.client
+}

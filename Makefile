@@ -18,7 +18,6 @@ build: check-prereqs
 clean: stop
 	@echo "Cleaning up..."
 	@docker-compose down -v
-	@rm -rf ./test-files/samples/large-transactions.csv
 
 # Development environment
 dev: start

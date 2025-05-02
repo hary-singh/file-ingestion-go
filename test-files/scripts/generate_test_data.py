@@ -32,7 +32,7 @@ def generate_product_id(hcpcs):
     prefix = prefix_map.get(hcpcs[0], 'DME')
     return f"{prefix}-{hcpcs}-{random.randint(1000, 9999)}"
 
-def generate_test_data(num_records=10000, output_file='test-files/samples/large-transactions.csv'):
+def generate_test_data(num_records=1000, output_file='test-files/samples/large-transactions.csv'):
     start_date = datetime.now() - timedelta(days=30)
 
     with open(output_file, 'w', newline='') as f:

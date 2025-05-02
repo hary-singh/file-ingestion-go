@@ -102,20 +102,43 @@ func startHealthCheck() {
 func startLocalProcessing(validator *services.FileValidator, log *zap.Logger) {
 	time.Sleep(5 * time.Second)
 
-	event := blobEvent{
-		EventType: "Microsoft.Storage.BlobCreated",
-		Data: blobEventData{
-			URL:           "http://azurite:10000/devstoreaccount1/cust123-orders/orders-2024-03-20.csv",
-			ContentType:   "text/csv",
-			ContentLength: 1024,
-		},
+	// Use the same connection string as in docker-compose
+	storageConn := os.Getenv("AzureWebJobsStorage")
+	blobStorage, err := adapters.NewAzureBlobStorage(storageConn)
+	if err != nil {
+		log.Error("Failed to create blob storage", zap.Error(err))
+		return
 	}
 
-	eventBytes, _ := json.Marshal(event)
-	handler := middleware.RecoverMiddleware(createEventHandler(validator, log), log)
+	containerName := "cust123-transactions"
+	ctx := context.Background()
+	containerClient := blobStorage.Client().ServiceClient().NewContainerClient(containerName)
 
-	if err := handler(context.Background(), eventBytes); err != nil {
-		log.Error("Failed to process test file", zap.Error(err))
+	pager := containerClient.NewListBlobsFlatPager(nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			log.Error("Failed to list blobs", zap.Error(err))
+			break
+		}
+		for _, blob := range page.Segment.BlobItems {
+			fileName := *blob.Name
+			url := fmt.Sprintf("http://azurite:10000/devstoreaccount1/%s/%s", containerName, fileName)
+			event := blobEvent{
+				EventType: "Microsoft.Storage.BlobCreated",
+				Data: blobEventData{
+					URL:           url,
+					ContentType:   "text/csv",
+					ContentLength: int(*blob.Properties.ContentLength),
+				},
+			}
+			eventBytes, _ := json.Marshal(event)
+			handler := middleware.RecoverMiddleware(createEventHandler(validator, log), log)
+			log.Info("Processing file", zap.String("file", fileName))
+			if err := handler(ctx, eventBytes); err != nil {
+				log.Error("Failed to process file", zap.String("file", fileName), zap.Error(err))
+			}
+		}
 	}
 }
 

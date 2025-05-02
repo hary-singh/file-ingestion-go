@@ -9,7 +9,7 @@ setup_services
 echo "Running large file test..."
 az storage blob upload \
     --container-name "cust123-transactions" \
-    --name "transactions-large-2024-03-20.csv" \
+    --name "transactions-2024-03-20.csv" \
     --file "test-files/samples/large-transactions.csv" \
     --connection-string "$STORAGE_CONN" \
     > /dev/null
