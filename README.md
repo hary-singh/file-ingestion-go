@@ -57,24 +57,42 @@ flowchart TD
 1. Clone the repo
 2. Start all services:
 
-    ```sh
-    make test-local
+    ```shell
+    make build
+    make start
     ```
+3. Running tests
+
+    ```shell
+    make test-small
+    ```
+   or
+   ```shell
+   make test-large
+   ```
+   or
+    ```shell
+   make test-all
+   ```
+
+4. The consumer runs automatically but and logs the messages to the console after deserialization.
+   To inspect the consumer navigate here:
+    ```shell
+   cd cmd/consumer/main.go
+   ```
 
    This builds the validator, starts all containers, uploads a sample file, and prints logs.
 
-3. Check Kafka output:
-
-   The script will consume messages from the `orders.raw` topic and show validator logs.
 
 ## Project Structure
 
-- `cmd/function/` — Main entrypoint (Azure Function or local)
-- `internal/services/` — File validation and processing logic
-- `internal/adapters/` — Integrations: Blob, Kafka, Schema Registry, Postgres
-- `internal/domain/` — Domain models and errors
-- `test-files/` — Sample files and test scripts
-- `docker-compose.yml` — Local dev stack
+- `cmd/function/` - Main entrypoint for the validator service
+- `cmd/consumer/` - Kafka Avro consumer for testing
+- `internal/services/` - Core validation, conversion, and processing logic
+- `internal/adapters/` - Integrations for storage, Kafka, schema registry, config
+- `internal/domain/` - Domain models and error types
+- `test-files/` - Test scripts, sample data, and schema registration
+- `schemas/` - Avro schema definitions
 
 ## Configuration
 
@@ -84,6 +102,10 @@ Set environment variables (see `docker-compose.yml` for examples):
 - `DB_CONNECTION_STRING`
 - `KAFKA_BOOTSTRAP_SERVERS`
 - `ENVIRONMENT` (set to `local` for local dev)
+
+- The system expects CSV files to match the schema and validation profile for each customer.
+- All Avro messages use the Confluent wire format.
+- For local development, Azurite is used to emulate Azure Blob Storage.
 
 ## Example: Processing a File
 
