@@ -1,0 +1,12 @@
+{
+  "bindings": [
+    {
+      "type": "eventGridTrigger",
+      "name": "event",
+      "direction": "in",
+      "eventHubName": "blob-events",
+      "connection": "EventGridConnectionString"
+    }
+  ],
+  "disabled": false
+}
