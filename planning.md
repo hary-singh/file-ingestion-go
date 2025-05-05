@@ -58,18 +58,6 @@ Uploads occur daily or weekly. The system is designed to be fast, modular, and o
 - Quarantine/invalid file handling
 - Optional transformation to unified schema
 
-### Could Have
-
-- Self-service UI for customers
-- SLA monitoring for ingestion
-
-### Won't Have (MVP)
-
-- Real-time validation feedback
-- Auto-generated schemas
-
----
-
 ## Architecture
 
 ```mermaid
@@ -157,7 +145,7 @@ flowchart TD
     - `DD_SERVICE=file-validator`
     - `DD_VERSION=1.0.0`
 - JSON logs to stdout (`zap`)
-- Tracing via Datadog APM or OpenTelemetry spans
+- Tracing via Datadog APM
 
 ---
 
@@ -168,45 +156,13 @@ flowchart TD
 3. **Upload Avro schemas to Confluent Schema Registry**
 4. **Develop Go Validator Function with Event Grid trigger**
 5. **Integrate Kafka publishing (Confluent Cloud or Event Hubs Kafka API)**
-6. **Instrument with Datadog logging and tracing**
-7. **Create audit logging mechanism (Blob or DB)**
-8. **(Optional) Add transformer microservice**
-9. **Test with sample files**
-10. **Monitor in Datadog**
+6. **Create audit logging mechanism (Blob or DB)**
+7. **(Optional) Add transformer microservice**
+8. **Test with sample files**
 
----
-
-## Milestones
-
-| Milestone | Description             | Est. Time |
-|-----------|-------------------------|-----------|
-| M1        | Blob + Event Grid Setup | 2 days    |
-| M2        | Config DB Design        | 1 day     |
-| M3        | Schema Registry Setup   | 1 day     |
-| M4        | Initial Go Validator    | 3 days    |
-| M5        | Avro Integration        | 2 days    |
-| M6        | Kafka Integration       | 2 days    |
-| M7        | Datadog Instrumentation | 1 day     |
-| M8        | Retry/Error Handling    | 2 days    |
-| M9        | Sample File Testing     | 2 days    |
-
----
-
-## Evaluation & Metrics (via Datadog)
-
-- **Validation Latency**: Measure via trace spans
-- **Kafka Publish Time**: Traced per record or batch
-- **Records Processed**: Log count per file
-- **Error Rate**: Track failed validations
-- **Customer-level Dashboards**: Filter logs/spans by `x-customer-id`
-- **Replayability and Audit Trail**: Validate by inspecting raw logs and offsets
-
----
 
 ## Future Enhancements
 
 - Add UI for file submission and status
-- Self-service schema testing
 - Workflow to support schema evolution
-- Notification system (email or webhook) for success/failure
 
